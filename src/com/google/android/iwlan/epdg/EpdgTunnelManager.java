@@ -1549,7 +1549,6 @@ public class EpdgTunnelManager {
             throw new IwlanSimNotReadyException("Nai is null.");
         }
 
-        Log.d(TAG, "getLocalIdentification: Nai: " + nai);
         return getId(nai, true);
     }
 
@@ -1582,7 +1581,6 @@ public class EpdgTunnelManager {
             option = new EapSessionConfig.EapAkaOption.Builder().setReauthId(mNextReauthId).build();
         }
 
-        Log.d(TAG, "getEapConfig: Nai: " + nai);
         return new EapSessionConfig.Builder()
                 .setEapAkaConfig(subId, TelephonyManager.APPTYPE_USIM, option)
                 .setEapIdentity(nai.getBytes(StandardCharsets.US_ASCII))

@@ -127,7 +127,7 @@ public class IwlanNetworkService extends NetworkService {
 
         @Override
         public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
-            Log.d(TAG, "onLinkPropertiesChanged: " + linkProperties);
+            Log.d(TAG, "onLinkPropertiesChanged");
         }
 
         /** Called when access to the specified network is blocked or unblocked. */

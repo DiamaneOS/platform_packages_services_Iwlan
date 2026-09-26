@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# Source IWLAN app, its own UID and domain. IpSecService owns tunnel creation.
+type diamaneos_iwlan_app, domain;
+typeattribute diamaneos_iwlan_app coredomain;
+app_domain(diamaneos_iwlan_app)
+net_domain(diamaneos_iwlan_app)
+binder_use(diamaneos_iwlan_app)
+allow diamaneos_iwlan_app { app_api_service radio_service }:service_manager find;
+allow diamaneos_iwlan_app app_data_file:dir create_dir_perms;
+allow diamaneos_iwlan_app app_data_file:{ file lnk_file } create_file_perms;
+neverallow diamaneos_iwlan_app self:global_capability_class_set *;
+neverallow diamaneos_iwlan_app self:{ qipcrtr_socket tipc_socket rawip_socket packet_socket netlink_xfrm_socket } *;

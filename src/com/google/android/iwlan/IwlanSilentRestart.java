@@ -73,8 +73,6 @@ public class IwlanSilentRestart extends ContentProvider {
             @NonNull String method,
             @Nullable String arg,
             @Nullable Bundle extras) {
-        Log.d(TAG, "called " + authority + " " + method);
-
         if (METHOD_RESTART_IWLAN.equals(method)) {
             final Context context = getContext();
             if (context == null) {
@@ -83,8 +81,10 @@ public class IwlanSilentRestart extends ContentProvider {
             }
 
             context.enforceCallingOrSelfPermission(PERMISSION_RESTART_IWLAN, null);
+            // A provider can remain addressable when its feature is disabled.
+            // Do not dereference an uninitialized handler or log caller-supplied data.
+            if (mHandler == null) return null;
             Log.i(TAG, "Restart com.google.android.iwlan");
-
             mHandler.post(this::clearAndExit);
         }
 
