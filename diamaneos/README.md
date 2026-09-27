@@ -2,6 +2,7 @@
 
 This fork retains the AOSP IWLAN and Android IKE/IPsec implementation. Downstream
 changes give the service a separate app UID and package-specific SELinux domain,
+limit direct networking to IKE UDP plus Android DNS/network binding,
 protect its restart provider at the manifest boundary, handle disabled restart
 state, and remove subscriber authentication identities and detailed network
 objects from selected diagnostic logs. No carrier authentication, TLS/IKE identity
@@ -45,3 +46,9 @@ Do not automatically bundle `ImsServiceEntitlement`: the inspected AOSP revision
 includes Firebase/Play messaging dependencies. Carriers requiring TS.43 activation
 need a separately reviewed provisioning implementation; do not bypass entitlement
 or enable Wi-Fi calling globally merely to make a toggle visible.
+
+The app does not inherit `netdomain`: that attribute also grants raw-IP and route
+netlink access. The pinned IKE library uses UDP sockets; DNS resolution and network
+binding use netd's dedicated Unix sockets. IpSecService retains kernel XFRM
+operations. Review socket requirements when updating the IKE implementation;
+never remove the raw/modem/XFRM restrictions merely to accommodate a broad macro.
