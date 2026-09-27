@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# Source IWLAN app, its own UID and domain. IpSecService owns tunnel creation.
+type diamaneos_iwlan_app, domain;
+typeattribute diamaneos_iwlan_app coredomain;
+app_domain(diamaneos_iwlan_app)
+# The pinned IKE implementation uses UDP (IPv4/IPv6, including NAT-T).
+# net_domain also grants raw IP and route-netlink access, neither needed here.
+allow diamaneos_iwlan_app self:udp_socket create_socket_perms;
+allow diamaneos_iwlan_app node_type:udp_socket node_bind;
+allow diamaneos_iwlan_app port_type:udp_socket name_bind;
+unix_socket_connect(diamaneos_iwlan_app, dnsproxyd, netd)
+unix_socket_connect(diamaneos_iwlan_app, fwmarkd, netd)
+# Network.bindSocket passes the UDP descriptor to netd's FwmarkServer. It reads
+# SO_DOMAIN/SO_MARK and writes SO_MARK after checking the caller's network access.
+# The netdomain macro normally supplies these peer grants. Scope them to UDP.
+allow netd diamaneos_iwlan_app:fd use;
+allow netd diamaneos_iwlan_app:udp_socket { read write getattr getopt setopt };
+binder_use(diamaneos_iwlan_app)
+allow diamaneos_iwlan_app { app_api_service radio_service }:service_manager find;
+allow diamaneos_iwlan_app app_data_file:dir create_dir_perms;
+allow diamaneos_iwlan_app app_data_file:{ file lnk_file } create_file_perms;
+neverallow diamaneos_iwlan_app self:global_capability_class_set *;
+neverallow diamaneos_iwlan_app self:global_capability2_class_set *;
+neverallow diamaneos_iwlan_app self:{ qipcrtr_socket tipc_socket rawip_socket packet_socket netlink_xfrm_socket } *;

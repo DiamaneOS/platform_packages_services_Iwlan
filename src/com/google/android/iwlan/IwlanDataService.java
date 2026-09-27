@@ -187,7 +187,7 @@ public class IwlanDataService extends DataService {
         @Override
         public void onLinkPropertiesChanged(
                 @NonNull Network network, @NonNull LinkProperties linkProperties) {
-            Log.d(TAG, "onLinkPropertiesChanged: " + linkProperties);
+            Log.d(TAG, "onLinkPropertiesChanged");
 
             if (!network.equals(sNetwork)) {
                 Log.d(TAG, "Ignore LinkProperties changes for unused Network.");
@@ -215,7 +215,7 @@ public class IwlanDataService extends DataService {
                 @NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
             // onCapabilitiesChanged is guaranteed to be called immediately after onAvailable per
             // API
-            Log.d(TAG, "onCapabilitiesChanged: " + network + " " + networkCapabilities);
+            Log.d(TAG, "onCapabilitiesChanged");
             if (networkCapabilities != null) {
                 if (networkCapabilities.hasTransport(TRANSPORT_CELLULAR)) {
                     Log.d(TAG, "Network " + network + " connected using transport MOBILE");
