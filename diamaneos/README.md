@@ -1,54 +1,66 @@
 # DiamaneOS IWLAN integration
 
-This fork retains the AOSP IWLAN and Android IKE/IPsec implementation. Downstream
-changes give the service a separate app UID and package-specific SELinux domain,
-limit direct networking to IKE UDP plus Android DNS/network binding,
-protect its restart provider at the manifest boundary, handle disabled restart
-state, and remove subscriber authentication identities and detailed network
-objects from selected diagnostic logs. No carrier authentication, TLS/IKE identity
-check or cryptographic algorithm is weakened.
+This fork keeps the AOSP IWLAN and Android IKE/IPsec implementation. Downstream
+changes:
 
-Baseline: AOSP `ddf0eb7f277ea6a5a62c63678d17218714f38071`. Keep the upstream history
-and review upstream changes normally; downstream changes are not a replacement
-for keeping the platform's IPsec/IKE modules current.
+- a separate app UID and package-specific SELinux domain;
+- direct networking limited to IKE UDP plus Android DNS/network binding;
+- the restart provider protected at the manifest boundary, and disabled restart
+  state handled;
+- subscriber authentication identities and detailed network objects removed
+  from selected diagnostic logs.
+
+No carrier authentication, TLS/IKE identity check or cryptographic algorithm is
+weakened.
+
+Baseline: AOSP `ddf0eb7f277ea6a5a62c63678d17218714f38071`. Keep upstream
+history and review upstream changes normally; the downstream changes are no
+substitute for current IPsec/IKE modules.
 
 ## Product wiring
 
-Check out at `packages/services/Iwlan`. Include `diamaneos/product.mk` from the
-product and `diamaneos/board.mk` from BoardConfig. These select `Iwlan` plus AOSP
-`QualifiedNetworksService`, provide the six framework service bindings, and add
-only this package's policy. Do not install another WLAN data/network service or
-competing overlay simultaneously. CarrierConfig overrides take precedence and
-must select the same qualified stack for each carrier.
+- Check out at `packages/services/Iwlan`. Include `diamaneos/product.mk` from
+  the product and `diamaneos/board.mk` from BoardConfig.
+- These select `Iwlan` plus AOSP `QualifiedNetworksService`, provide the six
+  framework service bindings and add only this package's policy.
+- Install no other WLAN data/network service or competing overlay alongside.
+  CarrierConfig overrides take precedence and must select the same qualified
+  stack for each carrier.
 
-The service still uses the platform signing certificate for the signature-only
-IPsec permission path. It no longer uses `android.uid.system`. All signature and
-privileged permissions remain manifest-declared; the signature does not justify
-sharing a UID. Moving to a dedicated signing key requires qualification of the
-bound-service app-op grant/revocation path first. Do not grant an IPsec app-op
-permanently from init as a shortcut.
+## Signing and networking
+
+- The service still uses the platform signing certificate for the
+  signature-only IPsec permission path, but no longer `android.uid.system`. All
+  signature and privileged permissions stay manifest-declared; the signature
+  does not justify sharing a UID.
+- Moving to a dedicated signing key first needs qualification of the
+  bound-service app-op grant/revocation path. Do not grant an IPsec app-op
+  permanently from init as a shortcut.
+- The app does not inherit `netdomain`, which also grants raw-IP and route
+  netlink access. The pinned IKE library uses UDP sockets; DNS resolution and
+  network binding use netd's dedicated Unix sockets; IpSecService keeps kernel
+  XFRM operations.
+- Review socket needs when updating the IKE implementation. Never remove the
+  raw/modem/XFRM restrictions to fit a broad macro.
 
 ## Qualification before product enablement
 
-This source integration is not a tested FP6 Wi-Fi calling release. Build the app
-and policy with neverallows, run `IwlanTests`/`IwlanRobolectricTests`, verify the
-separate runtime UID/domain, phone binding, permission grants and revocation,
-IPsec kernel features, and system-server-owned tunnel resources.
+This source integration is not a tested FP6 Wi-Fi calling release.
 
-Confirm the selected Qualcomm IMS/radio implementation supports the AP-assisted
-IWLAN data path and QNS handovers. A modem/QTI IWLAN vendor interface requirement
-cannot be replaced by a fake service. Retain carrier ePDG authentication,
-provisioning and user Wi-Fi calling choice. Validate both SIMs, IPv4/IPv6,
-reconnect, suspend, handover, VPN/lockdown, DNS/TLS/IKE failures and call audio.
-Emergency routing/location/callback tests need an authorized carrier/lab route.
-
-Do not automatically bundle `ImsServiceEntitlement`: the inspected AOSP revision
-includes Firebase/Play messaging dependencies. Carriers requiring TS.43 activation
-need a separately reviewed provisioning implementation; do not bypass entitlement
-or enable Wi-Fi calling globally merely to make a toggle visible.
-
-The app does not inherit `netdomain`: that attribute also grants raw-IP and route
-netlink access. The pinned IKE library uses UDP sockets; DNS resolution and network
-binding use netd's dedicated Unix sockets. IpSecService retains kernel XFRM
-operations. Review socket requirements when updating the IKE implementation;
-never remove the raw/modem/XFRM restrictions merely to accommodate a broad macro.
+- Build the app and policy with neverallows; run
+  `IwlanTests`/`IwlanRobolectricTests`.
+- Verify the separate runtime UID/domain, phone binding, permission grants and
+  revocation, IPsec kernel features and system-server-owned tunnel resources.
+- Confirm the selected Qualcomm IMS/radio implementation supports the
+  AP-assisted IWLAN data path and QNS handovers. A fake service cannot replace a
+  required modem/QTI IWLAN vendor interface.
+- Keep carrier ePDG authentication, provisioning and the user's Wi-Fi calling
+  choice.
+- Validate both SIMs, IPv4/IPv6, reconnect, suspend, handover, VPN/lockdown,
+  DNS/TLS/IKE failures and call audio. Emergency routing/location/callback tests
+  need an authorized carrier/lab route.
+- Do not automatically bundle `ImsServiceEntitlement`: the inspected AOSP
+  revision includes Firebase/Play messaging dependencies. Carriers requiring
+  TS.43 activation need a separately reviewed provisioning implementation. Do
+  not bypass entitlement or enable Wi-Fi calling globally just to make a toggle
+  visible.
